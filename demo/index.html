@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ChurnHawk | Customer Churn Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #07111e; --panel: #0d1a2b; --panel2: #111f30;
+    --border: #1a2e45; --accent: #0ea5e9; --teal: #14b8a6;
+    --green: #22c55e; --red: #ef4444; --amber: #f59e0b; --purple: #a855f7;
+    --muted: #64748b; --text: #e2e8f0;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  a { color: var(--accent); text-decoration: none; }
+
+  .header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 1080px; margin: 0 auto; height: 64px; display: flex; align-items: center; gap: 14px; }
+  .brand-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--teal); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; color: #07111e; flex-shrink: 0; }
+  .brand-name { font-weight: 700; font-size: 1.05rem; }
+  .brand-sub { font-size: 0.7rem; color: var(--muted); }
+  .pills { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); font-size: 0.7rem; color: var(--muted); }
+  .pill-green { border-color: #166534; color: var(--green); }
+  .pill-blue  { border-color: #1e3a5f; color: var(--accent); }
+  .pill-purple{ border-color: #4c1d95; color: var(--purple); }
+  .pill-teal  { border-color: #134e4a; color: var(--teal); }
+  .pill-amber { border-color: #78350f; color: var(--amber); }
+  .sim-tag { margin-left: 10px; }
+
+  .hero { background: #0d1f35; border-bottom: 1px solid var(--border); padding: 40px 24px; }
+  .hero-inner { max-width: 1080px; margin: 0 auto; }
+  .hero h1 { font-size: 2rem; font-weight: 800; margin-bottom: 6px; }
+  .hero h1 span { color: var(--teal); }
+  .hero p { color: var(--muted); font-size: 0.9rem; max-width: 600px; line-height: 1.6; margin-bottom: 28px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+  .kpi { background: rgba(14,165,233,0.06); border: 1px solid rgba(14,165,233,0.15); border-radius: 12px; padding: 16px; text-align: center; }
+  .kpi-val { font-size: 1.9rem; font-weight: 800; color: var(--teal); }
+  .kpi-label { font-size: 0.68rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .main { max-width: 1080px; margin: 0 auto; padding: 36px 24px 80px; display: grid; gap: 32px; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+  .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+
+  /* Architecture SVG panel */
+  .arch-wrap { background: var(--panel2); border-radius: 10px; padding: 20px; overflow-x: auto; }
+
+  /* Customer cards */
+  .customer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .cust-card { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .cust-card.high { border-color: rgba(239,68,68,0.4); }
+  .cust-card.medium { border-color: rgba(245,158,11,0.4); }
+  .cust-card.low { border-color: rgba(34,197,94,0.4); }
+  .cust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .risk-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 700; }
+  .risk-high { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .risk-medium { background: rgba(245,158,11,0.12); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .risk-low { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .cust-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 5px 0; border-bottom: 1px solid rgba(26,46,69,0.6); }
+  .cust-row:last-of-type { border-bottom: none; }
+  .cust-row span:first-child { color: var(--muted); }
+  .prob-bar { margin-top: 14px; }
+  .prob-label { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 6px; font-weight: 600; }
+  .bar-track { background: rgba(255,255,255,0.06); border-radius: 6px; height: 8px; }
+  .bar-fill { height: 8px; border-radius: 6px; transition: width 1.4s cubic-bezier(0.4,0,0.2,1); width: 0; }
+  .bar-red { background: var(--red); }
+  .bar-amber { background: var(--amber); }
+  .bar-green { background: var(--green); }
+  .cust-verdict { font-size: 0.72rem; margin-top: 8px; padding: 6px 10px; border-radius: 6px; font-weight: 600; }
+  .verdict-churn { background: rgba(239,68,68,0.1); color: #fca5a5; }
+  .verdict-monitor { background: rgba(245,158,11,0.1); color: #fcd34d; }
+  .verdict-stay { background: rgba(34,197,94,0.1); color: #86efac; }
+  .cust-code { margin-top: 10px; background: #060e1a; border-radius: 8px; padding: 10px 12px; font-family: monospace; font-size: 0.72rem; color: #86efac; }
+
+  /* Interactive scorer */
+  .scorer { background: var(--panel2); border-radius: 12px; padding: 20px; }
+  .scorer-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-group select, .form-group input[type="range"], .form-group input[type="number"] {
+    width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 8px 10px; font-size: 0.82rem; outline: none;
+  }
+  .form-group select:focus, .form-group input:focus { border-color: var(--teal); }
+  .form-group input[type="range"] { padding: 4px 0; accent-color: var(--teal); }
+  .score-result { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: none; }
+  .score-result.show { display: block; }
+  .score-main { font-size: 2.4rem; font-weight: 800; margin: 6px 0; }
+  .score-btn { padding: 10px 24px; background: var(--teal); color: #07111e; font-weight: 700; font-size: 0.9rem; border: none; border-radius: 8px; cursor: pointer; }
+  .score-btn:hover { opacity: 0.88; }
+
+  /* DAG */
+  .dag-stages { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .dag-stage { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; text-align: center; min-width: 110px; transition: all 0.3s; }
+  .dag-stage.running { border-color: var(--accent); background: rgba(14,165,233,0.08); }
+  .dag-stage.done { border-color: var(--teal); background: rgba(20,184,166,0.08); }
+  .dag-stage-name { font-size: 0.75rem; font-weight: 700; }
+  .dag-stage-sub { font-size: 0.65rem; color: var(--muted); margin-top: 3px; }
+  .dag-arrow { color: var(--teal); font-size: 1.1rem; }
+  .dag-log { font-family: monospace; font-size: 0.75rem; background: #060e1a; border-radius: 8px; padding: 14px; min-height: 60px; max-height: 180px; overflow-y: auto; color: #86efac; line-height: 1.8; display: none; }
+  .dag-log.show { display: block; }
+  .log-warn { color: #fcd34d; }
+  .run-btn { padding: 10px 24px; background: var(--accent); color: #07111e; font-weight: 700; font-size: 0.88rem; border: none; border-radius: 8px; cursor: pointer; }
+  .run-btn:hover { opacity: 0.88; }
+  .run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* Metrics bars */
+  .metric-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid rgba(26,46,69,0.5); }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-name { width: 120px; font-size: 0.82rem; color: var(--muted); flex-shrink: 0; }
+  .metric-bar-wrap { flex: 1; background: rgba(255,255,255,0.05); border-radius: 6px; height: 8px; }
+  .metric-bar-fill { height: 8px; border-radius: 6px; width: 0; transition: width 1.3s cubic-bezier(0.4,0,0.2,1); }
+  .metric-val { width: 60px; text-align: right; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+
+  /* Live stream */
+  .stream-feed { font-family: monospace; font-size: 0.78rem; background: #060e1a; border-radius: 8px; padding: 14px; height: 160px; overflow-y: auto; }
+  .stream-row { padding: 3px 0; display: flex; gap: 10px; }
+  .stream-ts { color: var(--muted); flex-shrink: 0; }
+  .stream-id { color: var(--accent); flex-shrink: 0; min-width: 90px; }
+  .stream-risk-H { color: var(--red); font-weight: 700; }
+  .stream-risk-M { color: var(--amber); }
+  .stream-risk-L { color: var(--green); }
+  .stream-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .stream-btn { padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 0.78rem; cursor: pointer; }
+  .stream-btn:hover { background: var(--panel2); }
+  .stream-kpi { display: flex; gap: 20px; font-size: 0.78rem; margin-bottom: 10px; }
+  .skpi { display: flex; flex-direction: column; }
+  .skpi-val { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+  .skpi-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; }
+
+  /* Insight */
+  .insight-box { background: rgba(14,165,233,0.05); border: 1px solid rgba(14,165,233,0.2); border-radius: 12px; padding: 22px; }
+  .insight-label { font-size: 0.7rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .typing-cursor::after { content: '▍'; animation: blink 1s step-end infinite; color: var(--teal); }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 0.8rem; color: var(--muted); margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="brand-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#07111e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">ChurnHawk</div>
+      <div class="brand-sub">Production MLOps · Customer Churn Prediction</div>
+    </div>
+    <div class="pills">
+      <span class="pill pill-teal">XGBoost</span>
+      <span class="pill pill-blue">Airflow</span>
+      <span class="pill pill-purple">MLflow</span>
+      <span class="pill pill-green">FastAPI</span>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Churn<span>Hawk</span></h1>
+    <p>End-to-end MLOps pipeline that predicts which telecom/SaaS customers will churn, with DVC data versioning, Evidently drift detection, Airflow orchestration, MLflow registry, FastAPI serving, and Prometheus/Grafana monitoring. One <code>docker compose up</code> deploys 7 services.</p>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-val" id="k1">0</div><div class="kpi-label">Accuracy</div></div>
+      <div class="kpi"><div class="kpi-val" id="k2">0</div><div class="kpi-label">ROC-AUC</div></div>
+      <div class="kpi"><div class="kpi-val" id="k3">0</div><div class="kpi-label">Docker Services</div></div>
+      <div class="kpi"><div class="kpi-val" id="k4">0</div><div class="kpi-label">Test Coverage</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Architecture -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> System Architecture</div>
+    <div class="arch-wrap">
+      <svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#14b8a6" />
+          </marker>
+        </defs>
+        <rect x="10" y="20" width="130" height="48" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+        <text x="75" y="39" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Raw Data</text>
+        <text x="75" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter" font-weight="600">Telco CSV</text>
+        <line x1="140" y1="44" x2="172" y2="44" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="175" y="20" width="130" height="48" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+        <text x="240" y="39" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Data Versioning</text>
+        <text x="240" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter" font-weight="600">DVC + MinIO</text>
+        <line x1="305" y1="44" x2="337" y2="44" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="340" y="20" width="130" height="48" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+        <text x="405" y="39" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Data Quality</text>
+        <text x="405" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter" font-weight="600">Evidently AI</text>
+        <line x1="470" y1="44" x2="507" y2="44" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="510" y="20" width="140" height="48" rx="8" fill="#0d1f2e" stroke="#14b8a6" stroke-width="1.5"/>
+        <text x="580" y="39" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Orchestration</text>
+        <text x="580" y="55" text-anchor="middle" fill="#5eead4" font-size="11" font-family="Inter" font-weight="600">Apache Airflow</text>
+        <line x1="580" y1="68" x2="580" y2="105" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="510" y="108" width="140" height="48" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+        <text x="580" y="127" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Train + Track</text>
+        <text x="580" y="143" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter" font-weight="600">XGBoost+MLflow</text>
+        <line x1="510" y1="132" x2="473" y2="132" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="340" y="108" width="130" height="48" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+        <text x="405" y="127" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Model Registry</text>
+        <text x="405" y="143" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter" font-weight="600">MLflow Registry</text>
+        <line x1="340" y1="132" x2="307" y2="132" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="175" y="108" width="130" height="48" rx="8" fill="#0d1f2e" stroke="#14b8a6" stroke-width="1.5"/>
+        <text x="240" y="127" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Inference API</text>
+        <text x="240" y="143" text-anchor="middle" fill="#5eead4" font-size="11" font-family="Inter" font-weight="600">FastAPI :8000</text>
+        <line x1="240" y1="156" x2="240" y2="193" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="10"  y="196" width="130" height="48" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+        <text x="75"  y="215" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Metrics</text>
+        <text x="75"  y="231" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter" font-weight="600">Prometheus</text>
+        <rect x="175" y="196" width="130" height="48" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+        <text x="240" y="215" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Dashboards</text>
+        <text x="240" y="231" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter" font-weight="600">Grafana :3000</text>
+        <rect x="340" y="196" width="130" height="48" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+        <text x="405" y="215" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Alerting</text>
+        <text x="405" y="231" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter" font-weight="600">AlertManager</text>
+        <rect x="510" y="196" width="140" height="48" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+        <text x="580" y="215" text-anchor="middle" fill="#64748b" font-size="9" font-family="Inter">Backend DB</text>
+        <text x="580" y="231" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter" font-weight="600">PostgreSQL</text>
+        <text x="380" y="272" text-anchor="middle" fill="#475569" font-size="10" font-family="Inter">7 containerized services, one docker compose up</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Live customer risk stream -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Live Customer Risk Stream <span class="pill pill-amber sim-tag">SIMULATED</span></div>
+    <p style="font-size:0.75rem;color:var(--muted);margin:-8px 0 14px;">Randomly generated for demonstration, not connected to the live model. See the real dashboard for actual predictions.</p>
+    <div class="stream-kpi">
+      <div class="skpi"><div class="skpi-val" id="s-total">0</div><div class="skpi-label">Scored</div></div>
+      <div class="skpi"><div class="skpi-val" id="s-high" style="color:var(--red)">0</div><div class="skpi-label">High Risk</div></div>
+      <div class="skpi"><div class="skpi-val" id="s-medium" style="color:var(--amber)">0</div><div class="skpi-label">Medium Risk</div></div>
+      <div class="skpi"><div class="skpi-val" id="s-low" style="color:var(--green)">0</div><div class="skpi-label">Retained</div></div>
+    </div>
+    <div class="stream-controls">
+      <button class="stream-btn" id="stream-toggle" onclick="toggleStream()">Pause</button>
+      <button class="stream-btn" onclick="injectHighRisk()">Inject High-Risk Batch</button>
+    </div>
+    <div class="stream-feed" id="stream-feed"></div>
+  </div>
+
+  <!-- Pre-computed predictions -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Pre-computed Prediction Examples <span class="pill pill-amber sim-tag">STATIC EXAMPLE DATA</span></div>
+    <p style="font-size:0.75rem;color:var(--muted);margin:-8px 0 14px;">Fixed example values for illustration, these numbers never change.</p>
+    <div class="customer-grid">
+      <div class="cust-card high">
+        <div class="cust-header">
+          <span style="font-size:0.85rem;font-weight:700;">Customer A</span>
+          <span class="risk-badge risk-high">HIGH RISK</span>
+        </div>
+        <div class="cust-row"><span>Contract</span><span>Month-to-month</span></div>
+        <div class="cust-row"><span>Tenure</span><span>2 months</span></div>
+        <div class="cust-row"><span>Monthly</span><span>$89.65</span></div>
+        <div class="cust-row"><span>Internet</span><span>Fiber optic</span></div>
+        <div class="cust-row"><span>Payment</span><span>Electronic check</span></div>
+        <div class="prob-bar">
+          <div class="prob-label" style="color:var(--red)"><span>Churn Probability</span><span>82%</span></div>
+          <div class="bar-track"><div class="bar-fill bar-red" data-width="82"></div></div>
+          <div class="cust-verdict verdict-churn">Will CHURN. Immediate retention action needed</div>
+        </div>
+        <div class="cust-code">{"churn_prediction": 1, "probability": 0.82}</div>
+      </div>
+      <div class="cust-card medium">
+        <div class="cust-header">
+          <span style="font-size:0.85rem;font-weight:700;">Customer C</span>
+          <span class="risk-badge risk-medium">MEDIUM RISK</span>
+        </div>
+        <div class="cust-row"><span>Contract</span><span>One year</span></div>
+        <div class="cust-row"><span>Tenure</span><span>12 months</span></div>
+        <div class="cust-row"><span>Monthly</span><span>$65.40</span></div>
+        <div class="cust-row"><span>Internet</span><span>Fiber optic</span></div>
+        <div class="cust-row"><span>Payment</span><span>Mailed check</span></div>
+        <div class="prob-bar">
+          <div class="prob-label" style="color:var(--amber)"><span>Churn Probability</span><span>48%</span></div>
+          <div class="bar-track"><div class="bar-fill bar-amber" data-width="48"></div></div>
+          <div class="cust-verdict verdict-monitor">Monitor. Consider proactive outreach</div>
+        </div>
+        <div class="cust-code">{"churn_prediction": 0, "probability": 0.48}</div>
+      </div>
+      <div class="cust-card low">
+        <div class="cust-header">
+          <span style="font-size:0.85rem;font-weight:700;">Customer B</span>
+          <span class="risk-badge risk-low">LOW RISK</span>
+        </div>
+        <div class="cust-row"><span>Contract</span><span>Two year</span></div>
+        <div class="cust-row"><span>Tenure</span><span>48 months</span></div>
+        <div class="cust-row"><span>Monthly</span><span>$29.85</span></div>
+        <div class="cust-row"><span>Internet</span><span>DSL</span></div>
+        <div class="cust-row"><span>Payment</span><span>Bank transfer</span></div>
+        <div class="prob-bar">
+          <div class="prob-label" style="color:var(--green)"><span>Churn Probability</span><span>8%</span></div>
+          <div class="bar-track"><div class="bar-fill bar-green" data-width="8"></div></div>
+          <div class="cust-verdict verdict-stay">Will STAY. No action required</div>
+        </div>
+        <div class="cust-code">{"churn_prediction": 0, "probability": 0.08}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive churn scorer -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Interactive Churn Risk Scorer <span class="pill pill-amber sim-tag">HEURISTIC, NOT THE REAL MODEL</span></div>
+    <p style="font-size:0.75rem;color:var(--muted);margin:-8px 0 14px;">Illustrative point-based formula, the actual trained XGBoost model only runs in the live dashboard/API.</p>
+    <div class="scorer">
+      <div class="scorer-form">
+        <div class="form-group">
+          <label>Contract Type</label>
+          <select id="sc-contract" onchange="scoreCustomer()">
+            <option value="month">Month-to-month</option>
+            <option value="year1">One year</option>
+            <option value="year2">Two year</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tenure (months): <span id="sc-tenure-val">6</span></label>
+          <input type="range" id="sc-tenure" min="1" max="72" value="6" oninput="document.getElementById('sc-tenure-val').textContent=this.value;scoreCustomer()">
+        </div>
+        <div class="form-group">
+          <label>Monthly Charges ($)</label>
+          <input type="number" id="sc-charges" min="20" max="120" value="75" step="1" oninput="scoreCustomer()">
+        </div>
+        <div class="form-group">
+          <label>Internet Service</label>
+          <select id="sc-internet" onchange="scoreCustomer()">
+            <option value="fiber">Fiber optic</option>
+            <option value="dsl">DSL</option>
+            <option value="none">No internet</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="sc-payment" onchange="scoreCustomer()">
+            <option value="echeck">Electronic check</option>
+            <option value="mcheck">Mailed check</option>
+            <option value="bank">Bank transfer</option>
+            <option value="cc">Credit card</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tech Support</label>
+          <select id="sc-tech" onchange="scoreCustomer()">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+      </div>
+      <div id="score-result" class="score-result show">
+        <div id="sr-label" style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">Churn Probability</div>
+        <div id="sr-prob" class="score-main" style="color:var(--amber)">—</div>
+        <div class="bar-track" style="margin-bottom:10px;"><div id="sr-bar" class="bar-fill" style="background:var(--amber);"></div></div>
+        <div id="sr-verdict" style="font-size:0.82rem;color:var(--muted);">Adjust parameters to score</div>
+        <div id="sr-factors" style="margin-top:12px;font-size:0.78rem;color:var(--muted);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Airflow DAG simulation -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Airflow Training DAG: Live Simulation</div>
+    <div class="dag-stages">
+      <div class="dag-stage" id="ds0"><div class="dag-stage-name">Data Validation</div><div class="dag-stage-sub">Evidently AI</div></div>
+      <div class="dag-arrow">›</div>
+      <div class="dag-stage" id="ds1"><div class="dag-stage-name">Feature Eng.</div><div class="dag-stage-sub">Scale + encode</div></div>
+      <div class="dag-arrow">›</div>
+      <div class="dag-stage" id="ds2"><div class="dag-stage-name">Model Training</div><div class="dag-stage-sub">XGBoost</div></div>
+      <div class="dag-arrow">›</div>
+      <div class="dag-stage" id="ds3"><div class="dag-stage-name">Evaluate</div><div class="dag-stage-sub">AUC + accuracy</div></div>
+      <div class="dag-arrow">›</div>
+      <div class="dag-stage" id="ds4"><div class="dag-stage-name">MLflow Log</div><div class="dag-stage-sub">Track + register</div></div>
+      <div class="dag-arrow">›</div>
+      <div class="dag-stage" id="ds5"><div class="dag-stage-name">Deploy</div><div class="dag-stage-sub">FastAPI prod</div></div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <button class="run-btn" id="run-dag-btn" onclick="runDag()">▶ Simulate DAG Run</button>
+    </div>
+    <div class="dag-log show" id="dag-log">Waiting for DAG run...</div>
+  </div>
+
+  <!-- Model metrics -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> Model Performance Metrics</div>
+    <div id="metrics-container">
+      <div class="metric-row">
+        <div class="metric-name">Accuracy</div>
+        <div class="metric-bar-wrap"><div class="metric-bar-fill" data-w="79.56" style="background:var(--teal);"></div></div>
+        <div class="metric-val" style="color:var(--teal)">79.6%</div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-name">ROC-AUC</div>
+        <div class="metric-bar-wrap"><div class="metric-bar-fill" data-w="83.58" style="background:var(--teal);"></div></div>
+        <div class="metric-val" style="color:var(--teal)">83.6%</div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-name">Precision</div>
+        <div class="metric-bar-wrap"><div class="metric-bar-fill" data-w="63.78" style="background:var(--accent);"></div></div>
+        <div class="metric-val" style="color:var(--accent)">63.8%</div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-name">Recall</div>
+        <div class="metric-bar-wrap"><div class="metric-bar-fill" data-w="53.21" style="background:var(--accent);"></div></div>
+        <div class="metric-val" style="color:var(--accent)">53.2%</div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-name">F1-Score</div>
+        <div class="metric-bar-wrap"><div class="metric-bar-fill" data-w="58.02" style="background:var(--purple);"></div></div>
+        <div class="metric-val" style="color:var(--purple)">58.0%</div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-name">Test Coverage</div>
+        <div class="metric-bar-wrap"><div class="metric-bar-fill" data-w="89" style="background:var(--green);"></div></div>
+        <div class="metric-val" style="color:var(--green)">89%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Business insight -->
+  <div class="insight-box">
+    <div class="insight-label">Key Business Insight</div>
+    <div id="insight-text" class="typing-cursor" style="font-size:1rem;line-height:1.7;font-weight:500;"></div>
+  </div>
+
+</div>
+
+<footer>
+  Built by <a href="https://github.com/Hamilas">Rayen Lassoued</a> &nbsp;·&nbsp;
+  <a href="https://www.linkedin.com/in/lassoued-rayen/">LinkedIn</a> &nbsp;·&nbsp;
+  ChurnHawk
+</footer>
+
+<script>
+// ── KPI counter ──────────────────────────────────────────────────────────────
+function animKpi(id, target, suffix, decimals, dur) {
+  const el = document.getElementById(id);
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / dur, 1);
+    el.textContent = (target * p).toFixed(decimals) + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+setTimeout(() => {
+  animKpi('k1', 80.6, '%', 1, 1200);
+  animKpi('k2', 85.6, '%', 1, 1200);
+  animKpi('k3', 7, '', 0, 800);
+  animKpi('k4', 89, '%', 0, 1000);
+}, 300);
+
+// ── Metric bars animation ─────────────────────────────────────────────────────
+setTimeout(() => {
+  document.querySelectorAll('.metric-bar-fill').forEach(el => {
+    el.style.width = el.dataset.w + '%';
+  });
+  document.querySelectorAll('.bar-fill[data-width]').forEach(el => {
+    el.style.width = el.dataset.width + '%';
+  });
+}, 500);
+
+// ── Live stream ──────────────────────────────────────────────────────────────
+const CONTRACTS = ['MTM','1YR','2YR'];
+const SEGMENTS = ['TelecomA','RetailB','SaaSC','FinTechD','MediaE'];
+let streamOn = true, streamInterval, sTotal = 0, sHigh = 0, sMedium = 0, sLow = 0, custId = 1000;
+
+function scoreStream(contract, tenure, charges, payment) {
+  let p = 0.15;
+  if (contract === 'MTM') p += 0.28;
+  else if (contract === '1YR') p += 0.10;
+  if (tenure < 6) p += 0.22; else if (tenure < 18) p += 0.10;
+  if (charges > 80) p += 0.12; else if (charges > 60) p += 0.06;
+  if (payment === 'ECHECK') p += 0.15;
+  else if (payment === 'MCHECK') p += 0.08;
+  p += (Math.random() - 0.5) * 0.08;
+  return Math.max(0.01, Math.min(0.99, p));
+}
+
+function addStreamRow(forced) {
+  sTotal++;
+  const contract = forced ? 'MTM' : CONTRACTS[Math.floor(Math.random() * 3)];
+  const tenure = forced ? Math.floor(Math.random() * 5 + 1) : Math.floor(Math.random() * 60 + 1);
+  const charges = forced ? Math.floor(Math.random() * 30 + 85) : Math.floor(Math.random() * 80 + 25);
+  const payment = forced ? 'ECHECK' : ['ECHECK','MCHECK','BANK','CC'][Math.floor(Math.random()*4)];
+  const prob = scoreStream(contract, tenure, charges, payment);
+  const risk = prob > 0.55 ? 'H' : prob > 0.35 ? 'M' : 'L';
+  if (risk === 'H') sHigh++; else if (risk === 'M') sMedium++; else sLow++;
+
+  document.getElementById('s-total').textContent = sTotal;
+  document.getElementById('s-high').textContent = sHigh;
+  document.getElementById('s-medium').textContent = sMedium;
+  document.getElementById('s-low').textContent = sLow;
+
+  const feed = document.getElementById('stream-feed');
+  const ts = new Date().toTimeString().slice(0,8);
+  const id = 'CUS-' + String(custId++).padStart(4,'0');
+  const seg = SEGMENTS[Math.floor(Math.random()*5)];
+  const row = document.createElement('div');
+  row.className = 'stream-row';
+  const riskDot = risk==='H' ? '#ef4444' : '#f59e0b';
+  const riskLabel = risk==='H' ? 'HIGH' : 'MED';
+  row.innerHTML = `<span class="stream-ts">[${ts}]</span><span class="stream-id">${id}</span><span class="stream-risk-${risk}"><svg width="8" height="8" viewBox="0 0 8 8" style="display:inline-block;vertical-align:1px;margin-right:4px"><circle cx="4" cy="4" r="4" fill="${riskDot}"/></svg>${riskLabel}</span><span style="color:var(--muted)">${(prob*100).toFixed(1)}% churn · ${seg} · ${contract} · ${tenure}mo</span>`;
+  feed.prepend(row);
+  while (feed.children.length > 30) feed.removeChild(feed.lastChild);
+}
+
+function startStream() { streamInterval = setInterval(addStreamRow, 900); }
+function toggleStream() {
+  streamOn = !streamOn;
+  document.getElementById('stream-toggle').textContent = streamOn ? 'Pause' : 'Resume';
+  if (streamOn) startStream(); else clearInterval(streamInterval);
+}
+function injectHighRisk() { for (let i = 0; i < 5; i++) setTimeout(() => addStreamRow(true), i * 180); }
+startStream();
+
+// ── Interactive churn scorer ──────────────────────────────────────────────────
+function scoreCustomer() {
+  const contract = document.getElementById('sc-contract').value;
+  const tenure = parseInt(document.getElementById('sc-tenure').value);
+  const charges = parseFloat(document.getElementById('sc-charges').value) || 50;
+  const internet = document.getElementById('sc-internet').value;
+  const payment = document.getElementById('sc-payment').value;
+  const tech = document.getElementById('sc-tech').value;
+
+  let p = 0.10;
+  const factors = [];
+  if (contract === 'month') { p += 0.30; factors.push('⚠ Month-to-month contract (+30%)'); }
+  else if (contract === 'year1') { p += 0.08; }
+  if (tenure < 6) { p += 0.24; factors.push('⚠ New customer <6mo (+24%)'); }
+  else if (tenure < 18) { p += 0.10; factors.push('↑ Short tenure (+10%)'); }
+  else if (tenure > 36) { p -= 0.08; factors.push('✓ Long tenure (−8%)'); }
+  if (charges > 80) { p += 0.14; factors.push('⚠ High charges >$80 (+14%)'); }
+  else if (charges > 60) { p += 0.06; }
+  if (internet === 'fiber') { p += 0.10; factors.push('↑ Fiber optic (+10%)'); }
+  else if (internet === 'none') { p -= 0.05; }
+  if (payment === 'echeck') { p += 0.16; factors.push('⚠ Electronic check (+16%)'); }
+  else if (payment === 'mcheck') { p += 0.08; }
+  else if (payment === 'bank' || payment === 'cc') { p -= 0.04; factors.push('✓ Auto-pay method (−4%)'); }
+  if (tech === 'no') { p += 0.06; } else { p -= 0.04; factors.push('✓ Tech support (−4%)'); }
+  p = Math.max(0.01, Math.min(0.97, p));
+
+  const pct = (p * 100).toFixed(1);
+  const color = p > 0.55 ? 'var(--red)' : p > 0.35 ? 'var(--amber)' : 'var(--green)';
+  const verdict = p > 0.55
+    ? '● HIGH RISK: Immediate retention action recommended'
+    : p > 0.35
+    ? '● MEDIUM RISK: Monitor closely, consider proactive outreach'
+    : '● LOW RISK: Customer likely to stay';
+
+  document.getElementById('sr-prob').textContent = pct + '%';
+  document.getElementById('sr-prob').style.color = color;
+  document.getElementById('sr-bar').style.background = color;
+  document.getElementById('sr-bar').style.width = pct + '%';
+  document.getElementById('sr-verdict').textContent = verdict;
+  document.getElementById('sr-verdict').style.color = color;
+  document.getElementById('sr-factors').innerHTML = factors.length
+    ? '<strong style="color:var(--muted)">Risk factors:</strong><br>' + factors.join('<br>')
+    : '';
+}
+scoreCustomer();
+
+// ── Airflow DAG ──────────────────────────────────────────────────────────────
+const DAG_LOGS = [
+  '[12:00:01] <span style="color:var(--accent)">data_validation</span>: Running Evidently drift check...',
+  '[12:00:04] <span style="color:var(--accent)">data_validation</span>: ✓ No drift detected. Quality score: 98.2%',
+  '[12:00:05] <span style="color:var(--accent)">feature_engineering</span>: Scaling numeric features (StandardScaler)...',
+  '[12:00:06] <span style="color:var(--accent)">feature_engineering</span>: One-hot encoding 14 categorical features...',
+  '[12:00:07] <span style="color:var(--accent)">model_training</span>: Fitting XGBoostClassifier (max_depth=6, lr=0.1)...',
+  '[12:00:22] <span style="color:var(--accent)">model_training</span>: ✓ Training complete. Accuracy: 79.56%, AUC: 0.8358',
+  '[12:00:23] <span style="color:var(--accent)">branch_check</span>: Accuracy 79.56% ≥ threshold 75% → Proceed',
+  '[12:00:24] <span style="color:var(--accent)">mlflow_log</span>: Run logged. Experiment: churn_prediction_v42',
+  '[12:00:25] <span style="color:var(--amber)">mlflow_log</span>: ⚠ PSI(revenue)=0.214 drift alert logged',
+  '[12:00:26] <span style="color:var(--green)">deploy</span>: ✓ FastAPI service updated. Pipeline complete.',
+];
+const STAGE_AT = { 0: 0, 1: 2, 2: 4, 3: 5, 4: 7, 5: 8 };
+let dagRunning = false;
+
+function setDagStage(idx, state) {
+  const el = document.getElementById('ds' + idx);
+  el.className = 'dag-stage' + (state === 'running' ? ' running' : state === 'done' ? ' done' : '');
+}
+
+async function runDag() {
+  if (dagRunning) return;
+  dagRunning = true;
+  const btn = document.getElementById('run-dag-btn');
+  btn.disabled = true; btn.textContent = 'Running...';
+  const log = document.getElementById('dag-log');
+  log.innerHTML = '';
+  for (let i = 0; i < 6; i++) setDagStage(i, '');
+
+  DAG_LOGS.forEach((line, idx) => {
+    setTimeout(() => {
+      log.innerHTML += '<div>' + line + '</div>';
+      log.scrollTop = log.scrollHeight;
+      for (const [s, at] of Object.entries(STAGE_AT)) {
+        if (idx === at) setDagStage(parseInt(s), 'running');
+        if (idx === at + 1) setDagStage(parseInt(s), 'done');
+      }
+      if (idx === DAG_LOGS.length - 1) {
+        setDagStage(5, 'done');
+        btn.textContent = '▶ Run Again'; btn.disabled = false; dagRunning = false;
+      }
+    }, idx * 700);
+  });
+}
+
+// ── Typing insight ────────────────────────────────────────────────────────────
+const insight = "A telecom company with 50,000 subscribers losing 5% per quarter loses 2,500 customers, approximately EUR 1.8M in annual revenue. ChurnHawk identifies at-risk customers 30 days in advance, enabling targeted retention campaigns that recover 30-40% of potential churners.";
+let ii = 0;
+const insightEl = document.getElementById('insight-text');
+function typeInsight() {
+  if (ii < insight.length) {
+    insightEl.textContent += insight[ii++];
+    setTimeout(typeInsight, 18);
+  } else {
+    insightEl.classList.remove('typing-cursor');
+  }
+}
+setTimeout(typeInsight, 1000);
+</script>
+</body>
+</html>

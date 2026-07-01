@@ -1,0 +1,97 @@
+groups:
+  - name: churn_model_alerts
+    interval: 30s
+    rules:
+      # Model Performance Alerts
+      - alert: ModelAccuracyDegraded
+        expr: churn_model_accuracy < 0.75
+        for: 10m
+        labels:
+          severity: warning
+          component: model
+        annotations:
+          summary: "Model accuracy has degraded"
+          description: "Model accuracy is {{ $value }}, below threshold of 0.75"
+
+      - alert: ModelAUCDegraded
+        expr: churn_model_auc_roc < 0.80
+        for: 10m
+        labels:
+          severity: warning
+          component: model
+        annotations:
+          summary: "Model AUC-ROC has degraded"
+          description: "Model AUC-ROC is {{ $value }}, below threshold of 0.80"
+
+      # Data Quality Alerts
+      - alert: DataDriftDetected
+        expr: churn_data_drift_detected == 1
+        for: 5m
+        labels:
+          severity: critical
+          component: data
+        annotations:
+          summary: "Data drift has been detected"
+          description: "Significant data drift detected in production data"
+
+      - alert: DataQualityLow
+        expr: churn_data_quality_score < 0.85
+        for: 15m
+        labels:
+          severity: warning
+          component: data
+        annotations:
+          summary: "Data quality score is low"
+          description: "Data quality score is {{ $value }}, below threshold of 0.85"
+
+      # API Performance Alerts
+      - alert: HighPredictionLatency
+        expr: histogram_quantile(0.95, rate(churn_prediction_latency_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High prediction latency detected"
+          description: "95th percentile latency is {{ $value }}s, above 1.0s threshold"
+
+      - alert: PredictionErrorRateHigh
+        expr: rate(churn_prediction_errors_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High prediction error rate"
+          description: "Error rate is {{ $value }} errors/sec"
+
+      - alert: APIDown
+        expr: up{job="churnhawk-inference"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Churn Inference API is down"
+          description: "API has been down for more than 2 minutes"
+
+      # System Alerts
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 90%"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80%"

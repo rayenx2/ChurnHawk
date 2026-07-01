@@ -1,0 +1,60 @@
+# --- Python & Virtual Env ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+*.egg-info/
+.pytest_cache/
+dist/
+build/
+
+# --- Environment Variables (SECRETS) ---
+.env
+.env.*
+
+# --- IDE & OS Settings ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Project Data (Never commit raw data) ---
+data/processed/*
+data/reports/*
+# Виняток: не ігнорувати файл .gitkeep (щоб Git бачив порожні папки)
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# --- Models & Artifacts ---
+models/*.pkl
+models/*.joblib
+models/*.bin
+models/*.zip
+
+# --- Docker Volumes (Local Data) ---
+postgres_data/
+postgres_data_new/
+postgres_data_final/
+minio_data/
+mlflow_data/
+airflow_logs/
+
+# --- Local Databases ---
+*.db
+*.sqlite
+mlflow.db
+
+# --- Airflow Specific ---
+airflow/logs/
+airflow/*.pid
+airflow/*.err
+airflow/*.log
+airflow/airflow-webserver.pid
+airflow/standalone_admin_password.txt
+webserver_config.py
+
+# --- Jupyter Notebooks Checkpoints ---
+.ipynb_checkpoints

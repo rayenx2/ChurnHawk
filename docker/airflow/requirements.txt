@@ -1,0 +1,9 @@
+apache-airflow[postgres,celery]==2.7.3
+apache-airflow-providers-docker==3.7.2
+mlflow==3.8.1
+xgboost==3.1.2
+scikit-learn==1.8.0
+pandas==2.3.3
+evidently==0.4.33
+boto3==1.41.5
+psycopg2-binary==2.9.11

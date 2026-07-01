@@ -1,0 +1,23 @@
+prepare:
+  test_size: 0.2
+  random_state: 42
+  stratify: true
+
+train:
+  max_depth: 6
+  learning_rate: 0.1
+  n_estimators: 100
+  min_child_weight: 1
+  subsample: 0.8
+  colsample_bytree: 0.8
+  objective: 'binary:logistic'
+  eval_metric: 'auc'
+  random_state: 42
+
+feature_engineering:
+  scale_features: true
+  create_interactions: true
+
+validation:
+  drift_threshold: 0.1
+  missing_threshold: 0.05

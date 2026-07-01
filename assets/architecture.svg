@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="620" viewBox="0 0 760 620" font-family="Inter, Arial, sans-serif">
+  <rect width="760" height="620" fill="#07111e"/>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#14b8a6"/>
+    </marker>
+  </defs>
+
+  <rect x="200" y="16" width="360" height="54" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+  <text x="380" y="38" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="700">Raw Data</text>
+  <text x="380" y="56" text-anchor="middle" fill="#64748b" font-size="11">Telco customer CSV</text>
+  <line x1="380" y1="70" x2="380" y2="102" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="150" y="102" width="460" height="54" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+  <text x="170" y="124" fill="#5eead4" font-size="12" font-weight="700">DVC + MinIO</text>
+  <text x="170" y="142" fill="#64748b" font-size="11">data versioning, reproducibility, S3-compatible artifact storage</text>
+  <line x1="380" y1="156" x2="380" y2="188" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="150" y="188" width="460" height="54" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+  <text x="170" y="210" fill="#5eead4" font-size="12" font-weight="700">Evidently AI</text>
+  <text x="170" y="228" fill="#64748b" font-size="11">drift detection, data quality validation</text>
+  <line x1="380" y1="242" x2="380" y2="274" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="100" y="274" width="560" height="90" rx="8" fill="#0d1f2e" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="120" y="298" fill="#e2e8f0" font-size="13" font-weight="700">Apache Airflow</text>
+  <text x="120" y="318" fill="#64748b" font-size="11">DAG: validate -&gt; engineer -&gt; train -&gt; evaluate -&gt; register</text>
+  <text x="120" y="336" fill="#64748b" font-size="11">smart deployment branching based on model performance</text>
+  <text x="120" y="354" fill="#64748b" font-size="11">port 8117</text>
+
+  <rect x="60" y="396" width="640" height="70" rx="8" fill="#0d1a2b" stroke="#1a2e45" stroke-width="1.5"/>
+  <text x="80" y="420" fill="#5eead4" font-size="12" font-weight="700">XGBoost + MLflow</text>
+  <text x="80" y="440" fill="#64748b" font-size="11">training, experiment tracking, model registry (port 5017)</text>
+
+  <line x1="380" y1="364" x2="380" y2="396" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="380" y1="466" x2="380" y2="498" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="60" y="498" width="640" height="60" rx="8" fill="#0d1f2e" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="80" y="522" fill="#e2e8f0" font-size="13" font-weight="700">FastAPI Inference</text>
+  <text x="80" y="542" fill="#64748b" font-size="11">/predict  /health  /stats  /metrics  /feedback  /dashboard (port 8017)</text>
+
+  <line x1="380" y1="558" x2="380" y2="590" stroke="#14b8a6" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <text x="380" y="600" text-anchor="middle" fill="#475569" font-size="11">Prometheus + Grafana, real-time monitoring and alerting</text>
+</svg>

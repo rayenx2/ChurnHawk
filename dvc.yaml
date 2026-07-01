@@ -1,0 +1,64 @@
+stages:
+  prepare_data:
+    cmd: python scripts/prepare_data.py
+    deps:
+      - data/raw/churn.csv
+      - scripts/prepare_data.py
+    params:
+      - prepare.test_size
+      - prepare.random_state
+    outs:
+      - data/processed/train.csv
+      - data/processed/test.csv
+    metrics:
+      - data/processed/data_stats.json:
+          cache: false
+
+  validate_data:
+    cmd: python src/validate.py --input data/processed/train.csv --output data/reports/
+    deps:
+      - data/processed/train.csv
+      - src/validate.py
+    outs:
+      - data/reports/validation_report.html:
+          cache: false
+      - data/reports/validation_metrics.json:
+          cache: false
+
+  train_model:
+    cmd: python src/train.py
+    deps:
+      - data/processed/train.csv
+      - src/train.py
+      - src/feature_engineering.py
+    params:
+      - train.max_depth
+      - train.learning_rate
+      - train.n_estimators
+    outs:
+      - models/model.pkl
+      - models/feature_engineer.pkl
+    metrics:
+      - models/metrics.json:
+          cache: false
+    plots:
+      - models/plots/confusion_matrix.png:
+          cache: false
+      - models/plots/roc_curve.png:
+          cache: false
+      - models/plots/feature_importance.png:
+          cache: false
+
+  evaluate_model:
+    cmd: python scripts/evaluate.py
+    deps:
+      - models/model.pkl
+      - models/feature_engineer.pkl
+      - data/processed/test.csv
+      - scripts/evaluate.py
+    metrics:
+      - models/test_metrics.json:
+          cache: false
+    plots:
+      - models/plots/test_confusion_matrix.png:
+          cache: false
